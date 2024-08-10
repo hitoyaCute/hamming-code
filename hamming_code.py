@@ -2,11 +2,15 @@
 from typing import Any
 from random import randrange as Rrange
 import random
-# random.seed(1)
+import json
+# with open("random state.json","w") as file:
+#     json.dump(random.getstate(),file)
+with open("random state.json","r") as file:
+    random.setstate(tuple([tuple(dat) if isinstance(dat,(tuple,list)) else dat for dat in json.load(file)]))
 
 def main() -> None:
     # exit()
-    data = 123456
+    data = 101010101010101010101010101010101010101010101010101010101010101010101010101019
     #creates error resistant data
     data = generate(data)
     print(data,"healty data")
@@ -14,7 +18,7 @@ def main() -> None:
     #perform n random bit flip
 
     #count of times to perform bit flip
-    n = 1
+    n = 5
     le = len(bin(data)[3:])
     le += 16-(le%16) if le%16 else 0
     for _ in range(n):
@@ -23,7 +27,7 @@ def main() -> None:
     print(data,"faulty data")
 
     #try to correct the data
-    print(retrieve(data))
+    print(retrieve(data),end="\n\n\n")
 
 def generate(data:int) -> str:
     """generate a error ressistant data"""
@@ -95,12 +99,20 @@ def retrieve(data:int) -> int:
             
             y = er[0]+(er[1]*2)
             x = er[2]+(er[3]*2)
-
-            print(list_flat(chunk) ,end = ":")
+            matrix_print(chunk)
 
             chunk[x][y] ^= 1
-            print(list_flat(chunk) ,y,x)
-            if chunk[0][0] != (sum(list_flat(chunk)) - chunk[0][0])%2:
+            chunk90 = rotate_matrix(chunk)
+
+            finalcheck = (
+            chunk[2][0] != (sum(chunk[2]+chunk[3]) - chunk[2][0])%2 or
+            chunk[1][0] != (sum(chunk[1]+chunk[3]) - chunk[1][0])%2 or
+            chunk[0][2] != (sum(chunk90[0]+chunk90[1]) - chunk[0][2])%2 or
+            chunk[0][1] != (sum(chunk90[0]+chunk90[2]) - chunk[0][1])%2)
+            print(x,y,chunk[0][0] != (sum(list_flat(chunk)) - chunk[0][0])%2,finalcheck,er ,end=" ,")
+            # matrix_print(chunk)
+            if (chunk[0][0] != (sum(list_flat(chunk)) - chunk[0][0])%2 and finalcheck) or finalcheck:
+                print()
                 matrix_print(chunk)
                 
                 raise Exception(f"there so manny issue on {i} that seems to be hard to fix")
@@ -167,7 +179,7 @@ def list_ljust(items:list ,n:int ,filler = 0):
     return items
 def list_flat(lst:list[list[Any]]) -> list[Any]:
     out = []
-    for lis in lst:
+    for lis in lst.copy():
         out.extend(lis)
     return out
 
